@@ -1,0 +1,34 @@
+# Jackknife bootstrapping, Python example
+
+import numpy as np
+
+# Sample dataset
+data = np.array([5.2, 4.8, 6.1, 5.5, 5.9, 6.3, 5.7, 5.0])
+
+n = len(data)
+
+# Statistic function (you can swap this for median, variance, etc.)
+def statistic(x):
+    return np.mean(x)
+
+# Step 1: Compute jackknife samples
+jackknife_samples = np.array([
+    statistic(np.delete(data, i)) for i in range(n)
+])
+
+# Step 2: Jackknife estimate (mean of leave-one-out estimates)
+jackknife_mean = np.mean(jackknife_samples)
+
+# Step 3: Original estimate
+original_estimate = statistic(data)
+
+# Step 4: Bias estimate
+bias = (n - 1) * (jackknife_mean - original_estimate)
+
+# Step 5: Standard error
+std_error = np.sqrt((n - 1) * np.mean((jackknife_samples - jackknife_mean) ** 2))
+
+print("Original estimate:", original_estimate)
+print("Jackknife estimate:", jackknife_mean)
+print("Bias estimate:", bias)
+print("Standard error:", std_error)

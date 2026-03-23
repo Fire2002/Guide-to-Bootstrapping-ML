@@ -1,0 +1,44 @@
+# leave-one-out bootstrapping, Python example
+
+import numpy as np
+
+# Sample dataset
+data = np.array([5.2, 4.8, 6.1, 5.5, 5.9, 6.3, 5.7, 5.0])
+
+n = len(data)
+B = 1000  # number of bootstrap resamples
+
+def statistic(x):
+    return np.mean(x)
+
+loo_bootstrap_estimates = []
+
+# Step 1: Leave-one-out loop
+for i in range(n):
+    loo_data = np.delete(data, i)
+    
+    bootstrap_estimates = []
+    
+    # Step 2: Bootstrap within each LOO dataset
+    for _ in range(B):
+        sample = np.random.choice(loo_data, size=len(loo_data), replace=True)
+        bootstrap_estimates.append(statistic(sample))
+    
+    loo_bootstrap_estimates.append(bootstrap_estimates)
+
+loo_bootstrap_estimates = np.array(loo_bootstrap_estimates)
+
+# Step 3: Aggregate results
+# Mean estimate across all bootstrap + LOO
+overall_mean = np.mean(loo_bootstrap_estimates)
+
+# Standard error
+overall_std = np.std(loo_bootstrap_estimates)
+
+# Confidence interval (percentile method)
+lower = np.percentile(loo_bootstrap_estimates, 2.5)
+upper = np.percentile(loo_bootstrap_estimates, 97.5)
+
+print("Mean estimate:", overall_mean)
+print("Standard error:", overall_std)
+print("95% CI:", (lower, upper))

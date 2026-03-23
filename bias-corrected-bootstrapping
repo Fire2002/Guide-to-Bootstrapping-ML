@@ -1,0 +1,62 @@
+# bias-corrected bootstrapping, Python example
+# (BCa - bias-corrected and accelerated bootstrapping))
+
+import numpy as np
+from scipy.stats import norm
+
+np.random.seed(42)
+
+data = np.random.normal(loc=50, scale=10, size=100)
+theta_hat = np.mean(data)
+
+print("Original Mean:", theta_hat)
+
+# bootstrap samples
+n_boot = 2000
+boot_stats = []
+
+n = len(data)
+
+for _ in range(n_boot):
+    sample = np.random.choice(data, size=n, replace=True)
+    boot_stats.append(np.mean(sample))
+
+boot_stats = np.array(boot_stats)
+
+# compute bias-correction factor
+# Proportion of bootstrap estimates less than original estimate
+prop_less = np.mean(boot_stats < theta_hat)
+
+# Convert to z-score
+z0 = norm.ppf(prop_less)
+
+# acceleration via jackknife
+jackknife_stats = []
+
+for i in range(n):
+    jack_sample = np.delete(data, i)
+    jackknife_stats.append(np.mean(jack_sample))
+
+jackknife_stats = np.array(jackknife_stats)
+jack_mean = np.mean(jackknife_stats)
+
+# Acceleration factor
+num = np.sum((jack_mean - jackknife_stats)**3)
+den = 6 * (np.sum((jack_mean - jackknife_stats)**2))**1.5
+a = num / den
+
+# compute BCa confidence interval
+alpha = 0.05
+
+z_low = norm.ppf(alpha/2)
+z_high = norm.ppf(1 - alpha/2)
+
+# Adjusted quantiles
+adj_low = norm.cdf(z0 + (z0 + z_low)/(1 - a*(z0 + z_low)))
+adj_high = norm.cdf(z0 + (z0 + z_high)/(1 - a*(z0 + z_high)))
+
+# Final interval
+lower = np.percentile(boot_stats, 100 * adj_low)
+upper = np.percentile(boot_stats, 100 * adj_high)
+
+print("BCa 95% CI:", (lower, upper))

@@ -1,0 +1,57 @@
+# moving block bootstrapping, Python example
+
+import numpy as np
+
+np.random.seed(42)
+
+# Create synthetic time series dataset with autocorrelation
+n = 100
+noise = np.random.normal(0, 1, n)
+data = np.zeros(n)
+
+phi = 0.8  # AR(1) coefficient
+for t in range(1, n):
+    data[t] = phi * data[t-1] + noise[t]
+
+# Moving block bootstrap function
+def moving_block_bootstrap(data, block_size, B, stat_func):
+    n = len(data)
+    
+    # Step 1: Create overlapping blocks
+    blocks = np.array([
+        data[i:i+block_size]
+        for i in range(n - block_size + 1)
+    ])
+    
+    bootstrap_estimates = []
+    
+    # Step 2: Bootstrap resampling
+    for _ in range(B):
+        num_blocks = int(np.ceil(n / block_size))
+        
+        sampled_blocks = blocks[
+            np.random.randint(0, len(blocks), size=num_blocks)
+        ]
+        
+        # Step 3: Concatenate and trim
+        sample = np.concatenate(sampled_blocks)[:n]
+        
+        bootstrap_estimates.append(stat_func(sample))
+    
+    return np.array(bootstrap_estimates)
+
+# Example usage
+B = 1000
+block_size = 5
+
+results = moving_block_bootstrap(
+    data,
+    block_size=block_size,
+    B=B,
+    stat_func=np.mean
+)
+
+print("Original mean:", np.mean(data))
+print("Bootstrap mean:", np.mean(results))
+print("Standard error:", np.std(results))
+print("95% CI:", np.percentile(results, [2.5, 97.5]))

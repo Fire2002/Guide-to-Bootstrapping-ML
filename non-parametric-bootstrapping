@@ -1,0 +1,26 @@
+# non-parametric bootstrapping
+
+import numpy as np
+
+np.random.seed(42)
+
+# Sample data
+data = np.array([5.2, 4.8, 6.1, 5.5, 5.9, 6.3, 5.7, 5.0])
+
+def nonparametric_bootstrap(data, B=1000):
+    n = len(data)
+    estimates = []
+
+    for _ in range(B):
+        sample = np.random.choice(data, size=n, replace=True)
+        estimates.append(np.mean(sample))
+    
+    return np.array(estimates)
+
+# Run
+np_results = nonparametric_bootstrap(data, B=1000)
+
+print("Nonparametric Bootstrap:")
+print("Mean:", np.mean(np_results))
+print("Std Error:", np.std(np_results))
+print("95% CI:", np.percentile(np_results, [2.5, 97.5]))

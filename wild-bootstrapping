@@ -1,0 +1,48 @@
+# wild bootstrapping, Python example
+
+'''
+for regression with heteroskedastic errors (non-constant variance)
+resamples residuals instead of data points to preserve the relationship
+betweeen predictors and response
+'''
+
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+# Sample dataset with heterosketastic noise
+np.random.seed(42)
+
+n = 100
+X = np.random.uniform(0, 10, size=(n, 1))
+noise = np.random.normal(0, X.flatten())  # variance increases with X
+y = 2.0 + 0.5 * X.flatten() + noise
+
+# Wild bootstrapping function
+def wild_bootstrap(X, y, B=1000):
+    model = LinearRegression().fit(X, y)
+    
+    y_hat = model.predict(X)
+    residuals = y - y_hat
+    
+    coef_estimates = []
+    
+    for _ in range(B):
+        # Step 1: Generate random weights (Rademacher distribution)
+        weights = np.random.choice([-1, 1], size=len(y))
+        
+        # Step 2: Create new response
+        y_star = y_hat + residuals * weights
+        
+        # Step 3: Refit model
+        model_star = LinearRegression().fit(X, y_star)
+        coef_estimates.append(model_star.coef_[0])
+    
+    return np.array(coef_estimates)
+
+# Example usage
+results = wild_bootstrap(X, y, B=1000)
+
+print("Original slope:", LinearRegression().fit(X, y).coef_[0])
+print("Bootstrap mean:", np.mean(results))
+print("Standard error:", np.std(results))
+print("95% CI:", np.percentile(results, [2.5, 97.5]))

@@ -1,0 +1,47 @@
+# standard bootstrapping, Python example
+
+import numpy as np
+
+np.random.seed(42)
+
+data = np.array([5.2, 4.8, 6.1, 5.5, 5.9, 6.3, 5.7, 5.0])
+
+def standard_bootstrap(data, B=1000):
+    n = len(data)
+    bootstrap_estimates = []
+    
+    # Step 1: Generate bootstrap samples
+    for _ in range(B):
+        sample = np.random.choice(data, size=n, replace=True)
+        bootstrap_estimates.append(np.mean(sample))
+    
+    bootstrap_estimates = np.array(bootstrap_estimates)
+    
+    # Step 2: Compute statistics
+    theta_hat = np.mean(data)
+    theta_bar = np.mean(bootstrap_estimates)
+    
+    # Standard error
+    se = np.std(bootstrap_estimates, ddof=1)
+    
+    # Bias
+    bias = theta_bar - theta_hat
+    
+    # Normal-based confidence interval
+    ci_lower = theta_hat - 1.96 * se
+    ci_upper = theta_hat + 1.96 * se
+    
+    return {
+        "original_estimate": theta_hat,
+        "bootstrap_mean": theta_bar,
+        "standard_error": se,
+        "bias": bias,
+        "95%_CI_normal": (ci_lower, ci_upper),
+        "95%_CI_percentile": np.percentile(bootstrap_estimates, [2.5, 97.5])
+    }
+
+# Run
+results = standard_bootstrap(data, B=1000)
+
+for k, v in results.items():
+    print(f"{k}: {v}")

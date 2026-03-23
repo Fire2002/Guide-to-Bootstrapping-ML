@@ -1,0 +1,59 @@
+# studentized bootstrapping, Python example
+# t-statistic is bootstrapped instead of bootstrapping the statistic directly
+
+import numpy as np
+
+np.random.seed(42)
+
+data = np.array([5.2, 4.8, 6.1, 5.5, 5.9, 6.3, 5.7, 5.0])
+
+def studentized_bootstrap(data, B=500, inner_B=200):
+    n = len(data)
+    
+    theta_hat = np.mean(data)
+    
+    t_values = []
+    
+    for _ in range(B):
+        # Outer bootstrap sample
+        sample = np.random.choice(data, size=n, replace=True)
+        theta_star = np.mean(sample)
+        
+        # Inner bootstrap to estimate SE*
+        inner_estimates = []
+        for _ in range(inner_B):
+            inner_sample = np.random.choice(sample, size=n, replace=True)
+            inner_estimates.append(np.mean(inner_sample))
+        
+        se_star = np.std(inner_estimates, ddof=1)
+        
+        # Avoid division by zero
+        if se_star > 0:
+            t_star = (theta_star - theta_hat) / se_star
+            t_values.append(t_star)
+    
+    t_values = np.array(t_values)
+    
+    # Get quantiles of t*
+    t_lower = np.percentile(t_values, 97.5)
+    t_upper = np.percentile(t_values, 2.5)
+    
+    # Estimate original SE (standard bootstrap)
+    boot_estimates = [
+        np.mean(np.random.choice(data, size=n, replace=True))
+        for _ in range(B)
+    ]
+    se_hat = np.std(boot_estimates, ddof=1)
+    
+    # Construct CI
+    ci_lower = theta_hat - t_lower * se_hat
+    ci_upper = theta_hat - t_upper * se_hat
+    
+    return theta_hat, se_hat, (ci_lower, ci_upper)
+
+# Run
+theta, se, ci = studentized_bootstrap(data)
+
+print("Estimate:", theta)
+print("Standard Error:", se)
+print("95% CI (studentized):", ci)

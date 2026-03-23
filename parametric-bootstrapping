@@ -1,0 +1,32 @@
+# parametric-bootstrapping
+
+import numpy as np
+
+np.random.seed(42)
+
+# Sample data
+data = np.array([5.2, 4.8, 6.1, 5.5, 5.9, 6.3, 5.7, 5.0])
+
+def parametric_bootstrap(data, B=1000):
+    n = len(data)
+    
+    # Step 1: Fit distribution (estimate parameters)
+    mu = np.mean(data)
+    sigma = np.std(data, ddof=1)
+    
+    estimates = []
+    
+    # Step 2: Generate synthetic datasets
+    for _ in range(B):
+        sample = np.random.normal(mu, sigma, size=n)
+        estimates.append(np.mean(sample))
+    
+    return np.array(estimates)
+
+# Run
+p_results = parametric_bootstrap(data, B=1000)
+
+print("Parametric Bootstrap:")
+print("Mean:", np.mean(p_results))
+print("Std Error:", np.std(p_results))
+print("95% CI:", np.percentile(p_results, [2.5, 97.5]))

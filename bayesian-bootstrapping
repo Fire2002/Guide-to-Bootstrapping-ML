@@ -1,0 +1,44 @@
+# Bayesian bootstrapping, Python example
+# weights are drawn from a Dirichlet distribution
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+np.random.seed(42)
+
+# Sample data
+data = np.random.normal(loc=50, scale=10, size=100)
+
+print("Original Mean:", np.mean(data))
+
+# Bayesian bootstrapping
+n_samples = 1000
+bayes_means = []
+
+n = len(data)
+
+for _ in range(n_samples):
+    # Draw weights from Dirichlet distribution
+    weights = np.random.dirichlet(alpha=np.ones(n))
+    
+    # Compute weighted mean
+    weighted_mean = np.sum(weights * data)
+    bayes_means.append(weighted_mean)
+
+bayes_means = np.array(bayes_means)
+
+# credible interval
+lower = np.percentile(bayes_means, 2.5)
+upper = np.percentile(bayes_means, 97.5)
+
+print("Bayesian Bootstrap Mean:", bayes_means.mean())
+print("95% Credible Interval:", (lower, upper))
+
+# plotting the results
+plt.hist(bayes_means, bins=30)
+plt.axvline(lower, linestyle='--', label='2.5%')
+plt.axvline(upper, linestyle='--', label='97.5%')
+plt.axvline(np.mean(data), linestyle='-', label='Original Mean')
+plt.legend()
+plt.title("Bayesian Bootstrap Distribution")
+plt.show()

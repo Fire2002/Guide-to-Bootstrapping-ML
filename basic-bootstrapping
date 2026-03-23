@@ -1,0 +1,42 @@
+# basic bootsrapping, Python example
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# sample data
+np.random.seed(42)
+
+# Sample dataset (e.g., measurements)
+data = np.random.normal(loc=50, scale=10, size=100)
+
+print("Original Mean:", np.mean(data))
+
+# bootstrap
+n_bootstrap = 1000
+bootstrap_means = []
+
+for _ in range(n_bootstrap):
+    # Resample with replacement
+    sample = np.random.choice(data, size=len(data), replace=True)
+    
+    # Compute statistic (mean)
+    bootstrap_means.append(np.mean(sample))
+
+bootstrap_means = np.array(bootstrap_means)
+
+# confidence interval
+# 95% confidence interval
+lower = np.percentile(bootstrap_means, 2.5)
+upper = np.percentile(bootstrap_means, 97.5)
+
+print("Bootstrap Mean:", bootstrap_means.mean())
+print("95% CI:", (lower, upper))
+
+# visaulize boostrap distribution
+plt.hist(bootstrap_means, bins=30)
+plt.axvline(lower, linestyle='--', label='2.5%')
+plt.axvline(upper, linestyle='--', label='97.5%')
+plt.axvline(np.mean(data), linestyle='-', label='Original Mean')
+plt.legend()
+plt.title("Bootstrap Distribution of Mean")
+plt.show()

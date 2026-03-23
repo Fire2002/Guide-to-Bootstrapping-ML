@@ -1,0 +1,49 @@
+# stratified bootstrapping, Python example
+
+import numpy as np
+
+np.random.seed(42)
+
+# Example: two groups with different distributions
+group_A = np.random.normal(5.0, 0.5, 50)   # e.g., Class A
+group_B = np.random.normal(7.0, 0.8, 30)   # e.g., Class B
+
+data = np.concatenate([group_A, group_B])
+labels = np.array(["A"] * len(group_A) + ["B"] * len(group_B))
+
+# Stratified bootstrapping function
+def stratified_bootstrap(data, labels, B=1000, stat_func=np.mean):
+    unique_groups = np.unique(labels)
+    
+    bootstrap_estimates = []
+    
+    for _ in range(B):
+        resampled_data = []
+        
+        # Step 1: Resample within each stratum
+        for group in unique_groups:
+            group_data = data[labels == group]
+            
+            sample = np.random.choice(
+                group_data,
+                size=len(group_data),   # preserve group size
+                replace=True
+            )
+            
+            resampled_data.append(sample)
+        
+        # Step 2: Combine strata
+        combined_sample = np.concatenate(resampled_data)
+        
+        # Step 3: Compute statistic
+        bootstrap_estimates.append(stat_func(combined_sample))
+    
+    return np.array(bootstrap_estimates)
+
+# Example usage
+results = stratified_bootstrap(data, labels, B=1000)
+
+print("Original mean:", np.mean(data))
+print("Bootstrap mean:", np.mean(results))
+print("Standard error:", np.std(results))
+print("95% CI:", np.percentile(results, [2.5, 97.5]))
